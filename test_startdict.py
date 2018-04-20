@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for bout."""
+"""Tests for stardict."""
 import logging
 import pytest
 from click.testing import CliRunner
