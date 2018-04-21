@@ -19,6 +19,19 @@ import click
 logger = logging.getLogger("stardict")
 
 
+def parse_ifo(config):
+    """Parse an ifo file.
+
+    Args:
+        config (Config): Configuration for stardict
+
+    Returns:
+        return None
+
+    """
+    return None
+
+
 @click.command()
 @click.argument("dict_path", type=click.Path(exists=True))
 @click.argument("word", type=str)

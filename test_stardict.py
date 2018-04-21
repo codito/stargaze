@@ -9,7 +9,16 @@ from click.testing import CliRunner
 import stardict
 
 
-def test_transaction_output_qif_header():
+@pytest.fixture
+def ifo_file():
+    return None
+
+
+def test_parse_ifo_returns_none_for_nonexistent_file(ifo_file):
+    pass
+
+
+def test_parse_ifo_returns_none_for_invalid_file(ifo_file):
     runner = CliRunner()
 
     result = runner.invoke(stardict.start, [".", "word"])
