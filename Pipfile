@@ -14,6 +14,7 @@ pytest = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 twine = "*"
+pyfakefs = "*"
 
 [requires]
 python_version = "3.6"

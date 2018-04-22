@@ -8,17 +8,45 @@ from click.testing import CliRunner
 
 import stardict
 
+IFO_DATA = {}
+
 
 @pytest.fixture
-def ifo_file():
-    return None
+def config():
+    c = stardict.Configuration("/tmp/stardict_test/test.ifo")
+    return c
 
 
-def test_parse_ifo_returns_none_for_nonexistent_file(ifo_file):
-    pass
+def _create_ifo_file(fs, config, header, content):
+    fs.create_file(config.ifo_path)
+    with open(config.ifo_path, "w", encoding="utf-8") as f:
+        f.write("{}\n".format(header))
+        f.writelines(["{0}={1}\n".format(k, v) for k, v in content.items()])
 
 
-def test_parse_ifo_returns_none_for_invalid_file(ifo_file):
+def test_parse_ifo_returns_none_for_nonexistent_file():
+    c = stardict.Configuration("/tmp/stardict_test/non_existent.ifo")
+    r = stardict.parse_ifo(c)
+    assert r == {}
+
+
+def test_parse_ifo_returns_none_for_invalid_file(fs, config):
+    _create_ifo_file(fs, config, "", {})
+    r = stardict.parse_ifo(config)
+    assert r == {}
+
+
+def test_parse_ifo_returns_info_dict_for_valid_file(fs, config):
+    magic_header = "StarDict's dict ifo file"
+    ifo_data = {'a': "b", 'aa ': "c\n"}
+    _create_ifo_file(fs, config, magic_header, ifo_data)
+
+    r = stardict.parse_ifo(config)
+
+    assert r == {'a': "b", 'aa': "c"}
+
+
+def test_start_sample():
     runner = CliRunner()
 
     result = runner.invoke(stardict.start, [".", "word"])

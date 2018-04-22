@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "27e375bf85c1bd44c14402bc76a1ebdc5838ee418ab3c6df619b520c3fcf92e9"
+            "sha256": "1e276944f4a9b1031c264a65e422d340af8ce3a984261371ab899bb4f580a255"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -188,6 +188,13 @@
                 "sha256:af9fcccb303899b83bec82dc9a1d56c60fc369973223a5e80c3dfa9bdf984405"
             ],
             "version": "==2.1.1"
+        },
+        "pyfakefs": {
+            "hashes": [
+                "sha256:96f1d008ae6cc4d9866dd674ee852748a11c67784f1f369221a5fd2750cc0883"
+            ],
+            "index": "pypi",
+            "version": "==3.4.1"
         },
         "pyflakes": {
             "hashes": [
