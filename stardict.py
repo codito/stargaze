@@ -16,12 +16,13 @@ r"""Stardict can parse and query stardict dictionary files.
 import logging
 import os
 from collections import namedtuple
+from struct import unpack
 
 import click
 
 logger = logging.getLogger("stardict")
 
-Configuration = namedtuple("Configuration", "ifo_path")
+Configuration = namedtuple("Configuration", "ifo_path idx_path")
 IFO = namedtuple("IFO", "version")
 
 
@@ -37,21 +38,6 @@ def parse_ifo(config):
 
     Returns:
         return dictionary of entries in IFO file
-
-    """
-    if not os.path.exists(config.ifo_path):
-        logger.info("IFO file doesn't exist at '{}'".format(config.ifo_path))
-        return {}
-
-    magic_header = "StarDict's dict ifo file"
-    with open(config.ifo_path, "r", encoding="utf-8") as f:
-        magic_string = f.readline().rstrip()
-        if (magic_string != magic_header):
-            logger.info("IFO: Incorrect header: {}".format(magic_string))
-            return {}
-
-        splits = (l.split("=") for l in map(str.rstrip, f) if l is not "")
-        return {k.strip(): v.strip() for k, v in splits}
 
     # Validation
     # version: must be "2.4.2" or "3.0.0".
@@ -70,6 +56,62 @@ def parse_ifo(config):
     # date=
     # sametypesequence= // very important.
     # dicttype=
+
+    """
+    if not os.path.exists(config.ifo_path):
+        logger.info("IFO file doesn't exist at '{}'".format(config.ifo_path))
+        return {}
+
+    magic_header = "StarDict's dict ifo file"
+    with open(config.ifo_path, "r", encoding="utf-8") as f:
+        magic_string = f.readline().rstrip()
+        if (magic_string != magic_header):
+            logger.info("IFO: Incorrect header: {}".format(magic_string))
+            return {}
+
+        options = (l.split("=") for l in map(str.rstrip, f) if l is not "")
+        return {k.strip(): v.strip() for k, v in options}
+
+
+def parse_idx(config):
+    r"""Parse an IDX file.
+
+    Args:
+        config (Configuration): a configuration object
+
+    Returns:
+        an iterable list of words.
+
+    The word list is a sorted list of word entries.
+
+    Each entry in the word list contains three fields, one after the other:
+         word_str;  // a utf-8 string terminated by '\0'.
+         word_data_offset;  // word data's offset in .dict file
+         word_data_size;  // word data's total size in .dict file
+
+    """
+    word_idx = {}
+    if not os.path.exists(config.idx_path):
+        return word_idx
+
+    with open(config.idx_path, "rb") as f:
+        def read_word(f):
+            word = bytearray()
+            c = f.read(1)
+            while c and c != b'\0':
+                word.extend(c)
+                c = f.read(1)
+            return word.decode("utf-8")
+
+        while True:
+            word_str = read_word(f)
+            offset_size = 8
+
+            word_pointer = f.read(offset_size)
+            if not word_pointer:
+                break
+            word_idx[word_str] = unpack(">II", word_pointer)
+    return word_idx
 
 
 @click.command()

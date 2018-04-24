@@ -13,8 +13,14 @@ IFO_DATA = {}
 
 @pytest.fixture
 def config():
-    c = stardict.Configuration("/tmp/stardict_test/test.ifo")
+    c = stardict.Configuration("/tmp/stardict_test/test.ifo",
+                               "/tmp/stardict_test/test.idx")
     return c
+
+
+def _create_invalid_config():
+    return stardict.Configuration("/tmp/stardict_test/non_existent.ifo",
+                                  "/tmp/stardict_test/non_existent.idx")
 
 
 def _create_ifo_file(fs, config, header, content):
@@ -24,8 +30,14 @@ def _create_ifo_file(fs, config, header, content):
         f.writelines(["{0}={1}\n".format(k, v) for k, v in content.items()])
 
 
+def _create_idx_file(fs, config, content):
+    fs.create_file(config.idx_path)
+    with open(config.idx_path, "wb") as f:
+        f.write(content)
+
+
 def test_parse_ifo_returns_none_for_nonexistent_file():
-    c = stardict.Configuration("/tmp/stardict_test/non_existent.ifo")
+    c = _create_invalid_config()
     r = stardict.parse_ifo(c)
     assert r == {}
 
@@ -44,6 +56,20 @@ def test_parse_ifo_returns_info_dict_for_valid_file(fs, config):
     r = stardict.parse_ifo(config)
 
     assert r == {'a': "b", 'aa': "c"}
+
+
+def test_parse_idx_returns_empty_dict_for_nonexistent_file():
+    c = _create_invalid_config()
+    r = stardict.parse_idx(c)
+    assert r == {}
+
+
+def test_parse_idx_returns_dict_for_valid_file(fs, config):
+    b = b"--\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
+    _create_idx_file(fs, config, b)
+    r = stardict.parse_idx(config)
+
+    assert r == {'--': (25204, 6646), '-ma': (62786, 2416)}
 
 
 def test_start_sample():
