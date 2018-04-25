@@ -19,7 +19,7 @@ VERSION = (1, 0, 0)
 
 # Dependencies required for execution
 REQUIRED = [
-    "click>=6.7",
+    "click>=6.7", "python-idzip",
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

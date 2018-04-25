@@ -22,7 +22,7 @@ import click
 
 logger = logging.getLogger("stardict")
 
-Configuration = namedtuple("Configuration", "ifo_path idx_path")
+Configuration = namedtuple("Configuration", "ifo_path idx_path dict_path")
 IFO = namedtuple("IFO", "version")
 
 
@@ -34,7 +34,7 @@ def parse_ifo(config):
     Note that we're not validating the contents strictly.
 
     Args:
-        config (Config): Configuration for stardict
+        config (Configuration): Configuration for stardict
 
     Returns:
         return dictionary of entries in IFO file
@@ -105,6 +105,7 @@ def parse_idx(config):
 
         while True:
             word_str = read_word(f)
+            # TODO support 64bit offset in stardict v3.0.0
             offset_size = 8
 
             word_pointer = f.read(offset_size)
@@ -112,6 +113,33 @@ def parse_idx(config):
                 break
             word_idx[word_str] = unpack(">II", word_pointer)
     return word_idx
+
+
+def parse_dict(config, word, offset, size):
+    """Parse a dictionary file.
+
+    Args:
+        config (Configuration): stardict configuration
+        word (str): word to lookup in the dictionary
+        offset (int): offset of the definition in dict file
+        size (int): size of the definition data
+
+    Returns:
+        definition of a word in the dictionary
+
+    """
+    definition = None
+    if not os.path.exists(config.dict_path):
+        logger.info("dict file not found: {}".format(config.dict_path))
+        return definition
+
+    # TODO
+    # support sametypesequence
+    # support dict.dz file
+    with open(config.dict_path, "rb", encoding="utf-8") as f:
+        f.seek(offset)
+        data = f.read(size)
+        return data
 
 
 @click.command()

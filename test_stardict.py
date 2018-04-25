@@ -14,13 +14,15 @@ IFO_DATA = {}
 @pytest.fixture
 def config():
     c = stardict.Configuration("/tmp/stardict_test/test.ifo",
-                               "/tmp/stardict_test/test.idx")
+                               "/tmp/stardict_test/test.idx",
+                               "/tmp/stardict_test/test.dict")
     return c
 
 
 def _create_invalid_config():
     return stardict.Configuration("/tmp/stardict_test/non_existent.ifo",
-                                  "/tmp/stardict_test/non_existent.idx")
+                                  "/tmp/stardict_test/non_existent.idx",
+                                  "/tmp/stardict_test/non_existent.dict")
 
 
 def _create_ifo_file(fs, config, header, content):
@@ -33,6 +35,12 @@ def _create_ifo_file(fs, config, header, content):
 def _create_idx_file(fs, config, content):
     fs.create_file(config.idx_path)
     with open(config.idx_path, "wb") as f:
+        f.write(content)
+
+
+def _create_dict_file(fs, config, content):
+    fs.create_file(config.dict_path)
+    with open(config.dict_path, "wb") as f:
         f.write(content)
 
 
@@ -70,6 +78,20 @@ def test_parse_idx_returns_dict_for_valid_file(fs, config):
     r = stardict.parse_idx(config)
 
     assert r == {'--': (25204, 6646), '-ma': (62786, 2416)}
+
+
+def test_parse_dict_returns_empty_definition_for_nonexistent_file():
+    c = _create_invalid_config()
+    r = stardict.parse_dict(c, "--", 0, 4)
+    assert r is None
+
+
+def test_parse_dict_returns_definitions_for_valid_file(fs, config):
+    b = b"\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
+    _create_dict_file(fs, config, b)
+    r = stardict.parse_dict(config, "--", 0, 4)
+
+    assert r == b"\x00\x00\x00b"
 
 
 def test_start_sample():
