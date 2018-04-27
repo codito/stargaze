@@ -4,6 +4,7 @@
 """Tests for stardict."""
 import logging
 import pytest
+import idzip
 from click.testing import CliRunner
 
 import stardict
@@ -41,6 +42,11 @@ def _create_idx_file(fs, config, content):
 def _create_dict_file(fs, config, content):
     fs.create_file(config.dict_path)
     with open(config.dict_path, "wb") as f:
+        f.write(content)
+
+
+def _create_dictzip_file(config, content):
+    with idzip.open(config.dict_path, "wb") as f:
         f.write(content)
 
 
@@ -90,6 +96,16 @@ def test_parse_dict_returns_definitions_for_valid_file(fs, config):
     b = b"\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
     _create_dict_file(fs, config, b)
     r = stardict.parse_dict(config, "--", 0, 4)
+
+    assert r == b"\x00\x00\x00b"
+
+
+def test_parse_dictzip_returns_definitions_for_valid_file(tmpdir, config):
+    b = b"\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
+    p = tmpdir.mkdir("stardict_test").join("dict_file.dict.dz").strpath
+    c = stardict.Configuration(config.ifo_path, config.idx_path, p)
+    _create_dictzip_file(c, b)
+    r = stardict.parse_dict(c, "--", 0, 4)
 
     assert r == b"\x00\x00\x00b"
 

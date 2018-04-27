@@ -19,6 +19,7 @@ from collections import namedtuple
 from struct import unpack
 
 import click
+import idzip
 
 logger = logging.getLogger("stardict")
 
@@ -135,8 +136,11 @@ def parse_dict(config, word, offset, size):
 
     # TODO
     # support sametypesequence
-    # support dict.dz file
-    with open(config.dict_path, "rb", encoding="utf-8") as f:
+    open_dict = open
+    if config.dict_path.endswith(".dz"):
+        open_dict = idzip.open
+
+    with open_dict(config.dict_path, "rb") as f:
         f.seek(offset)
         data = f.read(size)
         return data
