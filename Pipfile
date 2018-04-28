@@ -14,7 +14,7 @@ pytest = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 twine = "*"
-pyfakefs = "*"
+pyfakefs = {git = "https://github.com/jmcgeheeiv/pyfakefs.git"}
 codecov = "*"
 
 [requires]
