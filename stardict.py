@@ -23,7 +23,8 @@ import idzip
 
 logger = logging.getLogger("stardict")
 
-Configuration = namedtuple("Configuration", "ifo_path idx_path dict_path")
+Configuration = namedtuple("Configuration", "ifo_path idx_path syn_path"
+                           " dict_path")
 IFO = namedtuple("IFO", "version")
 
 
@@ -144,6 +145,32 @@ def parse_dict(config, word, offset, size):
         f.seek(offset)
         data = f.read(size)
         return data
+
+
+def parse_syn(config, word):
+    r"""Parse a syn file with synonyms.
+
+    Args:
+        config (Configuration): stardict configuration
+        word (str): synonym word for lookup
+
+    Returns:
+        index of the actual word for a given synonym in idx file
+
+    The format is simple. Each item contain one string and a number.
+    synonym_word;  // a utf-8 string terminated by '\0'.
+    original_word_index; // original word's index in .idx file.
+    Then other items without separation.
+    When you input synonym_word, StarDict will search original_word;
+
+    The length of "synonym_word" should be less than 256. In other
+    words, (strlen(word) < 256).
+    original_word_index is a 32-bits unsigned number in network byte order.
+    Two or more items may have the same "synonym_word" with different
+    original_word_index.
+
+    """
+    return None
 
 
 @click.command()

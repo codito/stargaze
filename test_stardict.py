@@ -16,6 +16,7 @@ IFO_DATA = {}
 def config():
     c = stardict.Configuration("/tmp/stardict_test/test.ifo",
                                "/tmp/stardict_test/test.idx",
+                               "/tmp/stardict_test/test.syn",
                                "/tmp/stardict_test/test.dict")
     return c
 
@@ -23,6 +24,7 @@ def config():
 def _create_invalid_config():
     return stardict.Configuration("/tmp/stardict_test/non_existent.ifo",
                                   "/tmp/stardict_test/non_existent.idx",
+                                  "/tmp/stardict_test/non_existent.syn",
                                   "/tmp/stardict_test/non_existent.dict")
 
 
@@ -48,6 +50,12 @@ def _create_dict_file(fs, config, content):
 def _create_dictzip_file(fs, config, content):
     fs.create_file(config.dict_path)
     with idzip.open(config.dict_path, "wb") as f:
+        f.write(content)
+
+
+def _create_syn_file(fs, config, content):
+    fs.create_file(config.syn_path)
+    with open(config.syn_path, "wb") as f:
         f.write(content)
 
 
@@ -104,11 +112,25 @@ def test_parse_dict_returns_definitions_for_valid_file(fs, config):
 def test_parse_dictzip_returns_definitions_for_valid_file(fs, config):
     b = b"\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
     p = config.dict_path + ".dz"
-    c = stardict.Configuration(config.ifo_path, config.idx_path, p)
+    c = stardict.Configuration(config.ifo_path, config.idx_path, "", p)
     _create_dictzip_file(fs, c, b)
     r = stardict.parse_dict(c, "--", 0, 4)
 
     assert r == b"\x00\x00\x00b"
+
+
+def test_parse_syn_returns_none_for_nonexistent_file():
+    c = _create_invalid_config()
+    r = stardict.parse_syn(c, "++")
+    assert r is None
+
+
+def test_parse_syn_returns_idx_index_for_valid_file(fs, config):
+    b = b"++\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
+    _create_idx_file(fs, config, b)
+    # r = stardict.parse_idx(config)
+
+    # assert r == 0
 
 
 def test_start_sample():
