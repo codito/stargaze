@@ -119,18 +119,18 @@ def test_parse_dictzip_returns_definitions_for_valid_file(fs, config):
     assert r == b"\x00\x00\x00b"
 
 
-def test_parse_syn_returns_none_for_nonexistent_file():
+def test_parse_syn_returns_empty_map_for_nonexistent_file():
     c = _create_invalid_config()
-    r = stardict.parse_syn(c, "++")
-    assert r is None
+    r = stardict.parse_syn(c)
+    assert r == {}
 
 
 def test_parse_syn_returns_idx_index_for_valid_file(fs, config):
-    b = b"++\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
-    _create_idx_file(fs, config, b)
-    # r = stardict.parse_idx(config)
+    b = b"++\x00\x00\x00bt++\x00\x00\x00f6-ma\x00\x00\x00\x19\x00f6"
+    _create_syn_file(fs, config, b)
+    r = stardict.parse_syn(config)
 
-    # assert r == 0
+    assert r == {'++': [25204, 26166], '-ma': [6400]}
 
 
 def test_start_sample():

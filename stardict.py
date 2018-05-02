@@ -97,16 +97,8 @@ def parse_idx(config):
         return word_idx
 
     with open(config.idx_path, "rb") as f:
-        def read_word(f):
-            word = bytearray()
-            c = f.read(1)
-            while c and c != b'\0':
-                word.extend(c)
-                c = f.read(1)
-            return word.decode("utf-8")
-
         while True:
-            word_str = read_word(f)
+            word_str = _read_word(f)
             # TODO support 64bit offset in stardict v3.0.0
             offset_size = 8
 
@@ -147,15 +139,14 @@ def parse_dict(config, word, offset, size):
         return data
 
 
-def parse_syn(config, word):
+def parse_syn(config):
     r"""Parse a syn file with synonyms.
 
     Args:
         config (Configuration): stardict configuration
-        word (str): synonym word for lookup
 
     Returns:
-        index of the actual word for a given synonym in idx file
+        map of synonyms and the word indices in idx
 
     The format is simple. Each item contain one string and a number.
     synonym_word;  // a utf-8 string terminated by '\0'.
@@ -170,7 +161,31 @@ def parse_syn(config, word):
     original_word_index.
 
     """
-    return None
+    syn_map = {}
+    if not os.path.exists(config.syn_path):
+        return syn_map
+
+    with open(config.syn_path, "rb") as f:
+        while True:
+            word_str = _read_word(f)
+            word_pointer = f.read(4)
+            if not word_pointer:
+                break
+            if word_str not in syn_map:
+                syn_map[word_str] = []
+            syn_map[word_str].extend(unpack(">I", word_pointer))
+
+    return syn_map
+
+
+def _read_word(f):
+    r"""Read a unicode `\0` terminated string from a file like object."""
+    word = bytearray()
+    c = f.read(1)
+    while c and c != b'\0':
+        word.extend(c)
+        c = f.read(1)
+    return word.decode("utf-8")
 
 
 @click.command()
