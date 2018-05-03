@@ -13,11 +13,15 @@ IFO_DATA = {}
 
 
 @pytest.fixture
-def config():
+def config(fs):
     c = stardict.Configuration("/tmp/stardict_test/test.ifo",
                                "/tmp/stardict_test/test.idx",
                                "/tmp/stardict_test/test.syn",
                                "/tmp/stardict_test/test.dict")
+    fs.create_file(c.ifo_path)
+    fs.create_file(c.idx_path)
+    fs.create_file(c.syn_path)
+    fs.create_file(c.dict_path)
     return c
 
 
@@ -29,20 +33,17 @@ def _create_invalid_config():
 
 
 def _create_ifo_file(fs, config, header, content):
-    fs.create_file(config.ifo_path)
     with open(config.ifo_path, "w", encoding="utf-8") as f:
         f.write("{}\n".format(header))
         f.writelines(["{0}={1}\n".format(k, v) for k, v in content.items()])
 
 
 def _create_idx_file(fs, config, content):
-    fs.create_file(config.idx_path)
     with open(config.idx_path, "wb") as f:
         f.write(content)
 
 
 def _create_dict_file(fs, config, content):
-    fs.create_file(config.dict_path)
     with open(config.dict_path, "wb") as f:
         f.write(content)
 
@@ -54,7 +55,6 @@ def _create_dictzip_file(fs, config, content):
 
 
 def _create_syn_file(fs, config, content):
-    fs.create_file(config.syn_path)
     with open(config.syn_path, "wb") as f:
         f.write(content)
 
@@ -133,10 +133,22 @@ def test_parse_syn_returns_idx_index_for_valid_file(fs, config):
     assert r == {'++': [25204, 26166], '-ma': [6400]}
 
 
-def test_start_sample():
+def test_start_ignores_dict_without_idx():
+    pass
+
+
+def test_start_ignores_dict_without_dict_or_dictzip():
+    pass
+
+
+def test_start_considers_syn_file_as_optional():
+    pass
+
+
+def test_start_sample(fs, config):
     runner = CliRunner()
 
-    result = runner.invoke(stardict.start, [".", "word"])
+    result = runner.invoke(stardict.start, ["/tmp/stardict_test", "word"])
 
     assert result.exception is None
     assert result.exit_code == 0

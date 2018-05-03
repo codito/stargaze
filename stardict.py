@@ -178,6 +178,39 @@ def parse_syn(config):
     return syn_map
 
 
+def _create_config(dict_path):
+    """Create a configuration for given dictionary path.
+
+    Args:
+        dict_path (str): path to dictionary
+
+    Returns:
+        a configuration object
+
+    """
+    configs = []
+    for dirpath, dirnames, filenames in os.walk(dict_path):
+        # find the .ifo files
+        ifo_files = [f for f in filenames if os.path.splitext(f)[1] == ".ifo"]
+        for ifo in ifo_files:
+            fname = os.path.splitext(ifo)[0]
+            idx_path = os.path.join(dirpath, fname + ".idx")
+            dict_path = os.path.join(dirpath, fname + ".dict")
+            syn_path = os.path.join(dirpath, fname + ".syn")
+            if not os.path.exists(idx_path):
+                continue
+            if not os.path.exists(dict_path):
+                dict_path = os.path.join(dirpath, fname + ".dict.dz")
+                if not os.path.exists(dict_path):
+                    continue
+            if not os.path.exists(syn_path):
+                syn_path = None
+
+            configs.extend(Configuration(ifo, idx_path, syn_path, dict_path))
+
+    return configs
+
+
 def _read_word(f):
     r"""Read a unicode `\0` terminated string from a file like object."""
     word = bytearray()
@@ -198,6 +231,8 @@ def start(dict_path, word, debug):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
         logger.info("Verbose messages are enabled.")
+
+    _create_config(dict_path)
 
 
 if __name__ == '__main__':
