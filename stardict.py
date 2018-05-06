@@ -28,6 +28,97 @@ Configuration = namedtuple("Configuration", "ifo_path idx_path syn_path"
 IFO = namedtuple("IFO", "version")
 
 
+class DictionaryError(Exception):
+    """Raised when dictionary is in invalid state."""
+
+    pass
+
+
+class Dictionary(object):
+    """A stardict dictionary."""
+
+    def __init__(self, dict_path):
+        """Create an instance of a stardict dictionary.
+
+        Args:
+            dict_path (str): directory containing dictionary files
+        """
+        if not os.path.exists(dict_path):
+            raise ValueError(dict_path)
+
+        self.configs = self._create_config(dict_path)
+        self.words = {}
+        self.word_offsets = []
+
+        if self.configs == []:
+            msg = "No configuration files found in path {}."
+            "Does it contain a .ifo file?".format(dict_path)
+            raise DictionaryError(msg)
+
+    def lookup(self, word):
+        """Look up a word in the dictionary.
+
+        Args:
+            word (str): word to look up.
+
+        Returns:
+            Definition of the word if available. None otherwise.
+
+        """
+        # TODO add support to search through all dictionaries
+        c = self.configs[0]
+
+        # ifo = parse_ifo(c)
+        if self.words == {}:
+            word_idx, word_list = parse_idx(c)
+            self.words.update(word_idx)
+            self.words.update(parse_syn(c))
+            self.word_offsets.extend(word_list)
+            print(self.words)
+        if word in self.words:
+            index = self.words[word]
+            print(index)
+            print(self.word_offsets[index])
+            dic = parse_dict(c, word,
+                             self.word_offsets[index][0],
+                             self.word_offsets[index][1])
+            return dic
+
+    def _create_config(self, dict_path):
+        """Create a configuration for given dictionary path.
+
+        Args:
+            dict_path (str): path to dictionary
+
+        Returns:
+            a configuration object
+
+        """
+        configs = []
+        for dirpath, dirs, files in os.walk(dict_path):
+            # find the .ifo files
+            ifo_files = [f for f in files if os.path.splitext(f)[1] == ".ifo"]
+            for ifo in ifo_files:
+                fname = os.path.splitext(ifo)[0]
+                ifo_path = os.path.join(dirpath, fname + ".ifo")
+                idx_path = os.path.join(dirpath, fname + ".idx")
+                dict_path = os.path.join(dirpath, fname + ".dict")
+                syn_path = os.path.join(dirpath, fname + ".syn")
+                if not os.path.exists(idx_path):
+                    continue
+                if not os.path.exists(dict_path):
+                    dict_path = os.path.join(dirpath, fname + ".dict.dz")
+                    if not os.path.exists(dict_path):
+                        continue
+                if not os.path.exists(syn_path):
+                    syn_path = None
+
+                c = Configuration(ifo_path, idx_path, syn_path, dict_path)
+                configs.insert(0, c)
+
+        return configs
+
+
 def parse_ifo(config):
     """Parse an ifo file.
 
@@ -93,9 +184,11 @@ def parse_idx(config):
 
     """
     word_idx = {}
+    word_list = []
     if not os.path.exists(config.idx_path):
-        return word_idx
+        return word_idx, word_list
 
+    count = 0
     with open(config.idx_path, "rb") as f:
         while True:
             word_str = _read_word(f)
@@ -105,8 +198,10 @@ def parse_idx(config):
             word_pointer = f.read(offset_size)
             if not word_pointer:
                 break
-            word_idx[word_str] = unpack(">II", word_pointer)
-    return word_idx
+            word_idx[word_str] = count
+            word_list.append(unpack(">II", word_pointer))
+            count += 1
+    return word_idx, word_list
 
 
 def parse_dict(config, word, offset, size):
@@ -127,8 +222,7 @@ def parse_dict(config, word, offset, size):
         logger.info("dict file not found: {}".format(config.dict_path))
         return definition
 
-    # TODO
-    # support sametypesequence
+    # TODO support sametypesequence
     open_dict = open
     if config.dict_path.endswith(".dz"):
         open_dict = idzip.open
@@ -136,7 +230,12 @@ def parse_dict(config, word, offset, size):
     with open_dict(config.dict_path, "rb") as f:
         f.seek(offset)
         data = f.read(size)
-        return data
+        data_str = data.decode("utf-8").rstrip("\0")
+
+        # We only support sametypesequence=m, remove the char from definition
+        if data_str[0] == "m":
+            return data_str[1:]
+        return data_str
 
 
 def parse_syn(config):
@@ -178,39 +277,6 @@ def parse_syn(config):
     return syn_map
 
 
-def _create_config(dict_path):
-    """Create a configuration for given dictionary path.
-
-    Args:
-        dict_path (str): path to dictionary
-
-    Returns:
-        a configuration object
-
-    """
-    configs = []
-    for dirpath, dirnames, filenames in os.walk(dict_path):
-        # find the .ifo files
-        ifo_files = [f for f in filenames if os.path.splitext(f)[1] == ".ifo"]
-        for ifo in ifo_files:
-            fname = os.path.splitext(ifo)[0]
-            idx_path = os.path.join(dirpath, fname + ".idx")
-            dict_path = os.path.join(dirpath, fname + ".dict")
-            syn_path = os.path.join(dirpath, fname + ".syn")
-            if not os.path.exists(idx_path):
-                continue
-            if not os.path.exists(dict_path):
-                dict_path = os.path.join(dirpath, fname + ".dict.dz")
-                if not os.path.exists(dict_path):
-                    continue
-            if not os.path.exists(syn_path):
-                syn_path = None
-
-            configs.extend(Configuration(ifo, idx_path, syn_path, dict_path))
-
-    return configs
-
-
 def _read_word(f):
     r"""Read a unicode `\0` terminated string from a file like object."""
     word = bytearray()
@@ -232,7 +298,8 @@ def start(dict_path, word, debug):
         logging.basicConfig(level=logging.DEBUG)
         logger.info("Verbose messages are enabled.")
 
-    _create_config(dict_path)
+    d = Dictionary(dict_path)
+    print(d.lookup(word))
 
 
 if __name__ == '__main__':
