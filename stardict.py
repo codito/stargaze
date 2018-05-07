@@ -71,14 +71,11 @@ class Dictionary(object):
         ifo = parse_ifo(c)
         if self.words == {}:
             word_idx, word_list = parse_idx(c)
-            self.words.update(word_idx)
+            self.words.update({x: [word_idx[x]] for x in word_idx})
             self.words.update(parse_syn(c))
             self.word_offsets.extend(word_list)
-            print(self.words)
         if word in self.words:
-            index = self.words[word]
-            print(index)
-            print(self.word_offsets[index])
+            index = self.words[word][0]
             dic = parse_dict(c, ifo, word,
                              self.word_offsets[index][0],
                              self.word_offsets[index][1])
