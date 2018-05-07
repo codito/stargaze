@@ -9,8 +9,6 @@ from click.testing import CliRunner
 
 import stardict
 
-IFO_DATA = {}
-
 
 @pytest.fixture
 def config(fs):
@@ -101,24 +99,43 @@ def test_parse_idx_returns_dict_for_valid_file(fs, config):
 
 def test_parse_dict_returns_empty_definition_for_nonexistent_file():
     c = _create_invalid_config()
-    r = stardict.parse_dict(c, "--", 0, 4)
+    r = stardict.parse_dict(c, {}, "--", 0, 4)
     assert r is None
 
 
-def test_parse_dict_returns_definitions_for_valid_file(fs, config):
-    b = b"m\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
-    _create_dict_file(fs, config, b)
-    r = stardict.parse_dict(config, "--", 0, 5)
+def test_parse_dict_throws_for_invalid_ifo():
+    with pytest.raises(TypeError):
+        c = _create_invalid_config()
+        stardict.parse_dict(c, None, "--", 0, 4)
 
-    assert r == "\x00\x00\x00b"
+
+def test_parse_dict_throws_for_invalid_config():
+    with pytest.raises(TypeError):
+        stardict.parse_dict(None, {}, "--", 0, 4)
 
 
 def test_parse_dict_returns_definitions_no_typesequence(fs, config):
     b = b"\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
     _create_dict_file(fs, config, b)
-    r = stardict.parse_dict(config, "--", 0, 4)
+    r = stardict.parse_dict(config, {}, "--", 0, 4)
+
+    assert r is None
+
+
+def test_parse_dict_returns_definitions_m_typesequence(fs, config):
+    b = b"m\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
+    _create_dict_file(fs, config, b)
+    r = stardict.parse_dict(config, {"sametypesequence": "m"}, "--", 0, 5)
 
     assert r == "\x00\x00\x00b"
+
+
+def test_parse_dict_returns_definitions_h_typesequence(fs, config):
+    b = b"m\x00\x00\x00bt\x00\x00\x19\xf6-ma\x00\x00\x00\xf5B\x00\x00\tp"
+    _create_dict_file(fs, config, b)
+    r = stardict.parse_dict(config, {"sametypesequence": "h"}, "--", 0, 5)
+
+    assert r == "m\x00\x00\x00b"
 
 
 def test_parse_dictzip_returns_definitions_for_valid_file(fs, config):
@@ -126,7 +143,7 @@ def test_parse_dictzip_returns_definitions_for_valid_file(fs, config):
     p = config.dict_path + ".dz"
     c = stardict.Configuration(config.ifo_path, config.idx_path, "", p)
     _create_dictzip_file(fs, c, b)
-    r = stardict.parse_dict(c, "--", 0, 5)
+    r = stardict.parse_dict(c, {}, "--", 0, 5)
 
     assert r == "\x00\x00\x00b"
 

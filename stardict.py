@@ -68,7 +68,7 @@ class Dictionary(object):
         # TODO add support to search through all dictionaries
         c = self.configs[0]
 
-        # ifo = parse_ifo(c)
+        ifo = parse_ifo(c)
         if self.words == {}:
             word_idx, word_list = parse_idx(c)
             self.words.update(word_idx)
@@ -79,7 +79,7 @@ class Dictionary(object):
             index = self.words[word]
             print(index)
             print(self.word_offsets[index])
-            dic = parse_dict(c, word,
+            dic = parse_dict(c, ifo, word,
                              self.word_offsets[index][0],
                              self.word_offsets[index][1])
             return dic
@@ -204,11 +204,12 @@ def parse_idx(config):
     return word_idx, word_list
 
 
-def parse_dict(config, word, offset, size):
+def parse_dict(config, ifo, word, offset, size):
     """Parse a dictionary file.
 
     Args:
         config (Configuration): stardict configuration
+        ifo (dict): dictionary of IFO file settings
         word (str): word to lookup in the dictionary
         offset (int): offset of the definition in dict file
         size (int): size of the definition data
@@ -217,25 +218,33 @@ def parse_dict(config, word, offset, size):
         definition of a word in the dictionary
 
     """
-    definition = None
+    if type(ifo) is not dict:
+        raise TypeError("`ifo` must be a dictionary.")
+
+    if type(config) is not Configuration:
+        raise TypeError("Invalid type for `config`.")
+
     if not os.path.exists(config.dict_path):
         logger.info("dict file not found: {}".format(config.dict_path))
-        return definition
+        return None
 
-    # TODO support sametypesequence
     open_dict = open
     if config.dict_path.endswith(".dz"):
         open_dict = idzip.open
 
+    types = ifo["sametypesequence"] if "sametypesequence" in ifo else "m"
     with open_dict(config.dict_path, "rb") as f:
         f.seek(offset)
         data = f.read(size)
         data_str = data.decode("utf-8").rstrip("\0")
 
-        # We only support sametypesequence=m, remove the char from definition
-        if data_str[0] == "m":
+        # We only support sametypesequence=m, h
+        if types == "m" and data_str[0] == "m":
             return data_str[1:]
-        return data_str
+
+        if types == "h":
+            return data_str
+        return None
 
 
 def parse_syn(config):
