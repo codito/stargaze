@@ -15,7 +15,7 @@ DESCRIPTION = "Parse and query stargaze dictionary files."
 URL = "https://github.com/codito/stargaze"
 EMAIL = "arun@codito.in"
 AUTHOR = "Arun Mahapatra"
-VERSION = (1, 0, 0)
+VERSION = (0, 0, 1)
 
 # Dependencies required for execution
 REQUIRED = [
@@ -26,7 +26,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # Import the README and use it as the long-description.
 # Note: this will only work if "README.md" is present in your MANIFEST.in file!
-with io.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
+with io.open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = "\n" + f.read()
 
 # Load the package"s __version__.py module as a dictionary.
