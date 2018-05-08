@@ -11,11 +11,11 @@ from setuptools import setup, Command
 
 # Package meta-data.
 NAME = "stargaze"
-DESCRIPTION = "Parse and query stargaze dictionary files."
+DESCRIPTION = "Parse and query stardict dictionary files."
 URL = "https://github.com/codito/stargaze"
 EMAIL = "arun@codito.in"
 AUTHOR = "Arun Mahapatra"
-VERSION = (0, 0, 1)
+VERSION = (0, 0, 2)
 
 # Dependencies required for execution
 REQUIRED = [
