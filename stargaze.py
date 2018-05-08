@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""Stardict can parse and query stardict dictionary files.
+r"""Stargaze can parse and query stardict dictionary files.
 
- _______ _________ _______  _______  ______  _________ _______ _________
-(  ____ \\__   __/(  ___  )(  ____ )(  __  \ \__   __/(  ____ \\__   __/
-| (    \/   ) (   | (   ) || (    )|| (  \  )   ) (   | (    \/   ) (
-| (_____    | |   | (___) || (____)|| |   ) |   | |   | |         | |
-(_____  )   | |   |  ___  ||     __)| |   | |   | |   | |         | |
-      ) |   | |   | (   ) || (\ (   | |   ) |   | |   | |         | |
-/\____) |   | |   | )   ( || ) \ \__| (__/  )___) (___| (____/\   | |
-\_______)   )_(   |/     \||/   \__/(______/ \_______/(_______/   )_(
+ ######  ########    ###    ########   ######      ###    ######## ########
+##    ##    ##      ## ##   ##     ## ##    ##    ## ##        ##  ##
+##          ##     ##   ##  ##     ## ##         ##   ##      ##   ##
+ ######     ##    ##     ## ########  ##   #### ##     ##    ##    ######
+      ##    ##    ######### ##   ##   ##    ##  #########   ##     ##
+##    ##    ##    ##     ## ##    ##  ##    ##  ##     ##  ##      ##
+ ######     ##    ##     ## ##     ##  ######   ##     ## ######## ########
 
 """
 import logging
@@ -21,7 +20,7 @@ from struct import unpack
 import click
 import idzip
 
-logger = logging.getLogger("stardict")
+logger = logging.getLogger("stargaze")
 
 Configuration = namedtuple("Configuration", "ifo_path idx_path syn_path"
                            " dict_path")
@@ -299,7 +298,7 @@ def _read_word(f):
 @click.option("--debug", is_flag=True, show_default=True,
               help="Show diagnostic messages.")
 def start(dict_path, word, debug):
-    """Stardict can parse and query stardict dictionary files."""
+    """Stargaze can parse and query stardict dictionary files."""
     if debug:
         logging.basicConfig(level=logging.DEBUG)
         logger.info("Verbose messages are enabled.")

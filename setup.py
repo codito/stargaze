@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Setup for stardict."""
+"""Setup for stargaze."""
 
 import io
 import os
@@ -10,9 +10,9 @@ from shutil import rmtree
 from setuptools import setup, Command
 
 # Package meta-data.
-NAME = "stardict"
-DESCRIPTION = "Parse and query stardict dictionary files."
-URL = "https://github.com/codito/stardict"
+NAME = "stargaze"
+DESCRIPTION = "Parse and query stargaze dictionary files."
+URL = "https://github.com/codito/stargaze"
 EMAIL = "arun@codito.in"
 AUTHOR = "Arun Mahapatra"
 VERSION = (1, 0, 0)
@@ -30,8 +30,8 @@ with io.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = "\n" + f.read()
 
 # Load the package"s __version__.py module as a dictionary.
-astardict = {}
-astardict["__version__"] = '.'.join(map(str, VERSION))
+astargaze = {}
+astargaze["__version__"] = '.'.join(map(str, VERSION))
 
 
 class UploadCommand(Command):
@@ -71,7 +71,7 @@ class UploadCommand(Command):
 # Where the magic happens:
 setup(
     name=NAME,
-    version=astardict["__version__"],
+    version=astargaze["__version__"],
     description=DESCRIPTION,
     long_description=long_description,
     author=AUTHOR,
@@ -79,10 +79,10 @@ setup(
     url=URL,
     # packages=find_packages(exclude=("tests",)),
     # If your package is a single module, use this instead of "packages":
-    py_modules=["stardict"],
+    py_modules=["stargaze"],
 
     entry_points={
-        "console_scripts": ["stardict=stardict:start"],
+        "console_scripts": ["stargaze=stargaze:start"],
     },
     install_requires=REQUIRED,
     include_package_data=True,
